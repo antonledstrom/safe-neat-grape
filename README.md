@@ -29,6 +29,12 @@ dotnet fake build -t run
 
 You can use the included `Dockerfile` and `build.fsx` script to deploy your application as Docker container. You can find more regarding this topic in the [official template documentation](https://safe-stack.github.io/docs/template-docker/).
 
+## Docker
+### Local
+1. dotnet fake build --target docker -e DockerUser=safe-template -e DockerImageName=safe-template
+2. docker run -d -it -p 8085:8085 {dockerUser}/{dockerImageName}
+3. Navigate to {dockerHost}:8085 url
+
 
 ## SAFE Stack Documentation
 

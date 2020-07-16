@@ -123,38 +123,44 @@ Target.create "Bundle" (fun _ ->
     Shell.copyDir publicDir clientDeployPath FileFilter.allFiles
 )
 
-let dockerUser = Environment.environVar "DockerUser"
-let dockerPassword = Environment.environVar "DockerPassword"
-let dockerLoginServer = Environment.environVar "DockerLoginServer"
-let dockerImageName = Environment.environVar "DockerImageName"
-let dockerFullName = sprintf "%s/%s" dockerUser dockerImageName
+let dockerImageName = Environment.environVarOrFail "DockerImageName"
+let dockerUser = Environment.environVarOrFail "DockerUser"
+let dockerFullName = sprintf "%s/%s:%s" dockerUser dockerImageName release.NugetVersion
 
 Target.create "Docker" (fun _ ->
     buildDocker dockerFullName
 )
 
-
 Target.create "Deploy" (fun _ ->
-    Command.ShellCommand <| sprintf "docker login %s --username \"%s\" --password \"%s\"" dockerLoginServer dockerUser dockerPassword 
+    buildDocker dockerFullName
+
+    let dockerLoginServer = Environment.environVarOrFail "DockerLoginServer"
+    let dockerPassword = Environment.environVarOrFail "DockerPassword"
+
+    // Trace.trace <| sprintf "docker login %s --username \"%s\" --password \"%s\"" dockerLoginServer dockerUser dockerPassword
+    Command.ShellCommand <| sprintf "docker login %s --username \"%s\" --password \"%s\"" dockerLoginServer dockerUser dockerPassword
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory deployDir
     |> CreateProcess.ensureExitCodeWithMessage "Docker login failed"
     |> Proc.run
     |> ignore
 
-    Command.ShellCommand <| sprintf "docker push %s/%s/%s:%s" dockerLoginServer dockerUser dockerImageName release.NugetVersion 
+    // Trace.trace <| sprintf "docker push %s/%s/%s:%s" dockerLoginServer dockerUser dockerImageName release.NugetVersion
+    Command.ShellCommand <| sprintf "docker push %s/%s/%s:%s" dockerLoginServer dockerUser dockerImageName release.NugetVersion
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory deployDir
-    |> CreateProcess.ensureExitCodeWithMessage "Docker push failed"
+    |> CreateProcess.ensureExitCodeWithMessage (sprintf "Docker push failed %s" release.NugetVersion)
     |> Proc.run
     |> ignore
 
-    Command.ShellCommand <| sprintf "push %s/%s/%s:latest" dockerLoginServer dockerUser dockerImageName
+    Trace.trace <| sprintf "docker push %s/%s/%s:latest" dockerLoginServer dockerUser dockerImageName
+    Command.ShellCommand <| sprintf "docker push %s/%s/%s:latest" dockerLoginServer dockerUser dockerImageName
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory deployDir
-    |> CreateProcess.ensureExitCodeWithMessage "Docker push failed"
+    |> CreateProcess.ensureExitCodeWithMessage "Docker push failed latest"
     |> Proc.run
-    |> ignore)
+    |> ignore
+)
 
 open Fake.Core.TargetOperators
 

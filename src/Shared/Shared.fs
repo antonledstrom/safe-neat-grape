@@ -35,36 +35,6 @@ module Axial =
 
     let cube (Axial(q,r)) =
         q,r,-q-r
-    
-// type CrossroadSide = CLeft | CRight
-
-// [<Struct>]
-// type Crossroad = Crossroad of tile:Axial * side:CrossroadSide
-
-// type BorderSide = BNW | BN | BNE // Remove b, 
-
-// (*
-     
-//         ____
-//  BNW   /q  r\
-//       /      \
-//       \      /
-//        \____/
-//                       *)
-
-// [<Struct>]
-// type Path = Path of tile:Axe * border:BorderSide
-
-// type Direction = Up | Down | Horizontal
-
-// type HexPoint = HexPoint of x:int * y:int
-// type Hex =
-//     { TopLeft: HexPoint
-//       TopRigh: HexPoint
-//       MidLeft: HexPoint
-//       MidRight: HexPoint
-//       BottomLeft: HexPoint
-//       BottomRight: HexPoint }
 
 [<Struct>]
 type Point = Point of x:float * y:float
@@ -72,19 +42,40 @@ type Point = Point of x:float * y:float
     member this.X = match this with Point(x,_) -> x
     member this.Y = match this with Point(_,y) -> y
 
-type GameMap = Axial Set
+    static member(+) (Point(q1, r1), Point(q2, r2)) =
+        Point (q1 + q2, r1 + r2)
+
+type HexState =
+    | Empty
+    | Selected
+
+type GameMap = Map<Axial, HexState>
 
 module GameMap =
-    let titleSize = 100
+    let tileSize = 50
     let init =
-        Set.empty
-        |> Set.add Axial.center
-        |> Set.add Axial.N
-        |> Set.add Axial.NW
-        |> Set.add Axial.NE
-        |> Set.add Axial.SE
-        |> Set.add Axial.SW
-        |> Set.add Axial.S
+        Map.empty
+        |> Map.add Axial.center Empty
+        |> Map.add Axial.N Empty
+        |> Map.add Axial.NW Empty
+        |> Map.add Axial.NE Empty
+        |> Map.add Axial.SE Empty
+        |> Map.add Axial.SW Empty
+        |> Map.add Axial.S Empty
+
+    let toList (m: GameMap) =
+        Map.toList m
+
+    let select axe =
+        Map.add axe Selected
+
+    let toggle axe (gameMap: Map<Axial, HexState>) : Map<Axial, HexState> =
+        gameMap
+        |> Map.find axe
+        |> (function
+            | Selected -> Empty
+            | Empty -> Selected)
+        |> fun s -> Map.add axe s gameMap
 
 module Hex =
     open System

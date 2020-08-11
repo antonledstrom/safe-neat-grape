@@ -9,6 +9,7 @@ open Thoth.Fetch
 open Thoth.Json
 
 open Shared
+open Fable.Core.JS
 
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
@@ -49,6 +50,41 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | _ -> currentModel, Cmd.none
 
 
+let hex =
+    let size = 100
+    let h = sqrt(3.) * (float size)
+    let w = 2. * (float size)
+    let horizontalDistance = w * 0.75
+
+    let startPoint = Point (500., 500.)
+    let nextHexStartPoint = Point(startPoint.X + horizontalDistance, startPoint.Y + (h/2.))
+    console.log(nextHexStartPoint)
+    let hexPoints1 =
+        [ 0..6 ]
+        |> List.map (Hex.flatHexCorner (Point ((float size),(float size))) size)
+        |> List.fold (fun curr (Point(x, y)) -> sprintf "%s %f,%f" curr x y ) ""
+
+    let hexPoints2 =
+        [ 0..6 ]
+        |> List.map (Hex.flatHexCorner nextHexStartPoint size)
+        |> List.fold (fun curr (Point(x, y)) -> sprintf "%s %f,%f" curr x y ) ""
+
+    svg [ Id "board"
+          HTMLAttr.Custom ("xmlns", "http://www.w3.org/2000/svg")
+          HTMLAttr.Custom ("version", "1.1")
+          HTMLAttr.Custom ("width", "100%")
+          HTMLAttr.Custom ("height", "100vh")
+          HTMLAttr.Custom ("xmlnsXlink", "http://www.w3.org/1999/xlink") ]
+        [ polyline [ Class "hex"
+                     HTMLAttr.Custom ("stroke", "black")
+                     HTMLAttr.Custom ("fill", "none")
+                     HTMLAttr.Custom ("points", hexPoints1) ] [ ]
+
+          polyline [ Class "hex"
+                     HTMLAttr.Custom ("stroke", "red")
+                     HTMLAttr.Custom ("fill", "none")
+                     HTMLAttr.Custom ("points", hexPoints2) ] [ ] ]
+
 let safeComponents =
     let components =
         span [ ]
@@ -75,14 +111,7 @@ let show = function
     | { Counter = None   } -> "Loading..."
 
 let view (model : Model) (dispatch : Msg -> unit) =
-    div []
-        [ h1 [] [ str "SAFE Template" ]
-          p  [] [ str "The initial counter is fetched from server" ]
-          p  [] [ str "Press buttons to manipulate counter:" ]
-          button [ OnClick (fun _ -> dispatch Decrement) ] [ str "-" ]
-          div [] [ str (show model) ]
-          button [ OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
-          safeComponents ]
+    hex
 
 #if DEBUG
 open Elmish.Debug

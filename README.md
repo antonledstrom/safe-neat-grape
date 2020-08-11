@@ -1,5 +1,14 @@
-# SAFE Template
+# My Readme
+## Docker
+### Local
+1. dotnet fake build --target docker -e DockerUser=safe-template -e DockerImageName=safe-template
+2. docker run -d -it -p 8085:8085 {dockerUser}/{dockerImageName}
+3. Navigate to {dockerHost}:8085 url
 
+## Local Dev
+1. dotnet fake build --target run -e DockerUser=safe-template -e DockerImageName=safe-template
+
+# SAFE Template
 This template can be used to generate a full-stack web application using the [SAFE Stack](https://safe-stack.github.io/). It was created using the dotnet [SAFE Template](https://safe-stack.github.io/docs/template-overview/). If you want to learn more about the template why not start with the [quick start](https://safe-stack.github.io/docs/quickstart/) guide?
 
 ## Install pre-requisites
@@ -28,13 +37,6 @@ dotnet fake build -t run
 
 
 You can use the included `Dockerfile` and `build.fsx` script to deploy your application as Docker container. You can find more regarding this topic in the [official template documentation](https://safe-stack.github.io/docs/template-docker/).
-
-## Docker
-### Local
-1. dotnet fake build --target docker -e DockerUser=safe-template -e DockerImageName=safe-template
-2. docker run -d -it -p 8085:8085 {dockerUser}/{dockerImageName}
-3. Navigate to {dockerHost}:8085 url
-
 
 ## SAFE Stack Documentation
 

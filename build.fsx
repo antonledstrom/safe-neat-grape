@@ -137,7 +137,6 @@ Target.create "Deploy" (fun _ ->
     let dockerLoginServer = Environment.environVarOrFail "DockerLoginServer"
     let dockerPassword = Environment.environVarOrFail "DockerPassword"
 
-    // Trace.trace <| sprintf "docker login %s --username \"%s\" --password \"%s\"" dockerLoginServer dockerUser dockerPassword
     Command.ShellCommand <| sprintf "docker login %s --username \"%s\" --password \"%s\"" dockerLoginServer dockerUser dockerPassword
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory deployDir
@@ -145,7 +144,6 @@ Target.create "Deploy" (fun _ ->
     |> Proc.run
     |> ignore
 
-    // Trace.trace <| sprintf "docker push %s/%s/%s:%s" dockerLoginServer dockerUser dockerImageName release.NugetVersion
     Command.ShellCommand <| sprintf "docker push %s/%s/%s:%s" dockerLoginServer dockerUser dockerImageName release.NugetVersion
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory deployDir
@@ -153,7 +151,6 @@ Target.create "Deploy" (fun _ ->
     |> Proc.run
     |> ignore
 
-    Trace.trace <| sprintf "docker push %s/%s/%s:latest" dockerLoginServer dockerUser dockerImageName
     Command.ShellCommand <| sprintf "docker push %s/%s/%s:latest" dockerLoginServer dockerUser dockerImageName
     |> CreateProcess.fromCommand
     |> CreateProcess.withWorkingDirectory deployDir

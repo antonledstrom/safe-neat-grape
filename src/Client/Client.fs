@@ -145,28 +145,31 @@ let drawPuzzle selected hovered puzzleMap dispatch =
             "#6bc4d2"
         else "#f0f0e8"
 
-    svg
-        [ Id "board"
-          HTMLAttr.Custom("xmlns", "http://www.w3.org/2000/svg")
-          HTMLAttr.Custom("version", "1.1")
-          HTMLAttr.Custom("width", "100%")
-          HTMLAttr.Custom("height", "100vh")
-          HTMLAttr.Custom("xmlnsXlink", "http://www.w3.org/1999/xlink") ]
+    fragment [] [
 
-        (puzzleMap
-         |> Puzzle.toList
-         |> List.map (fun (axe, state) ->
-            fragment [] [
-                polyline [ Class "hex"
-                           HTMLAttr.Custom("stroke", "#0f1417")
-                           HTMLAttr.Custom("fill", fillColor axe)
-                           HTMLAttr.Custom("points", axialToHexPixelPoints axe)
-                           OnClick (selectAxial axe)
-                           OnMouseOver (hoverAxial axe) ] [ ]
-                text [ HTMLAttr.Custom("fill", "#0f1417")
-                       HTMLAttr.Custom("fontFamily", "Verdana")
-                       HTMLAttr.Custom("x", (axialToPixelPoint axe).X)
-                       HTMLAttr.Custom("y", (axialToPixelPoint axe).Y) ] [ str <| PuzzlePiece.toDebugString axe state ] ]))
+        div [] (line |> List.mapi (fun i a -> str <| sprintf "%i r: %i q: %i |" i a.R a.Q))
+        svg
+            [ Id "board"
+              HTMLAttr.Custom("xmlns", "http://www.w3.org/2000/svg")
+              HTMLAttr.Custom("version", "1.1")
+              HTMLAttr.Custom("width", "100%")
+              HTMLAttr.Custom("height", "100vh")
+              HTMLAttr.Custom("xmlnsXlink", "http://www.w3.org/1999/xlink") ]
+
+            (puzzleMap
+             |> Puzzle.toList
+             |> List.map (fun (axe, state) ->
+                fragment [] [
+                    polyline [ Class "hex"
+                               HTMLAttr.Custom("stroke", "#0f1417")
+                               HTMLAttr.Custom("fill", fillColor axe)
+                               HTMLAttr.Custom("points", axialToHexPixelPoints axe)
+                               OnClick (selectAxial axe)
+                               OnMouseOver (hoverAxial axe) ] [ ]
+                    text [ HTMLAttr.Custom("fill", "#0f1417")
+                           HTMLAttr.Custom("fontFamily", "Verdana")
+                           HTMLAttr.Custom("x", (axialToPixelPoint axe).X)
+                           HTMLAttr.Custom("y", (axialToPixelPoint axe).Y) ] [ str <| PuzzlePiece.toDebugString axe state ] ])) ]
 
 let safeComponents =
     let components =

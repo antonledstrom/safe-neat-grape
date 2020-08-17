@@ -73,28 +73,29 @@ module Axial =
         let rDiff = abs (double r - f.R)
         let sDiff = abs (double s - f.S)
 
-        if qDiff > rDiff && qDiff > sDiff then Axial(q - r - s, r)
+        if qDiff > rDiff && qDiff > sDiff then Axial(- r - s, r)
         elif rDiff > sDiff then Axial(q, -q - s)
         else Axial(q, r)
 
     let toFractional (Axial (q, r)) = FractionalAxial(double q, double r)
 
-    let axialLerp (a: Axial) (b: Axial) distance =
+    let axialLerp (a: FractionalAxial) (b: FractionalAxial) distance =
         FractionalAxial
-            (Calculations.lerp (double a.Q) (double b.Q) distance, Calculations.lerp (double a.R) (double b.R) distance)
+            (Calculations.lerp a.Q b.Q distance, Calculations.lerp a.R b.R distance)
 
     let line (hex1: Axial) (hex2: Axial) =
-        // let fracational1 = toFractional hex1
-        // let fracational2 = toFractional hex1
+        let fracational1 = toFractional hex1
+        let fracational2 = toFractional hex2
         
-        let n = FractionalAxial.distance (toFractional hex1) (toFractional hex2)
+        let n = FractionalAxial.distance fracational1 fracational2
         let step = 1. / max n 1.
-        // let hex1Nudge = FractionalAxial (hex1.Q + 1e-6, hex2.R + 1e-6)
-        // let hex1Nudge = FractionalAxial(b.q + 1e-6, b.r + 1e-6)
-        // FractionalHex b_nudge(b.q + 1e-6, b.r + 1e-6, b.s - 2e-6);
+
+        let hex1Nudge = fracational1 + FractionalAxial (1e-6, 1e-6)
+        let hex2Nudge = fracational2 + FractionalAxial (1e-6, 1e-6)
+
         let rec fold acc i : Axial list =
             let axe =
-                axialLerp hex1 hex2 (double (i * step))
+                axialLerp hex1Nudge hex2Nudge (double (i * step))
                 |> fromFractionalAxial
 
             if i < n then fold (axe::acc) (i + 1.)

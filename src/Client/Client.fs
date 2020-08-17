@@ -9,63 +9,89 @@ open Thoth.Fetch
 open Thoth.Json
 
 open Shared
+open Shared.Puzzle
 open Fable.Core.JS
 
-// The model holds data that you want to keep track of while the application is running
-// in this case, we are keeping track of a counter
-// we mark it as optional, because initially it will not be available from the client
-// the initial value will be requested from server
 type Model =
-    { Counter: Counter option
-      GameMap: GameMap }
+    { Puzzle: Puzzle
+      Selected: Axial
+      Hover: Axial option }
 
-// The Msg type defines what events/actions can occur while the application is running
-// the state of the application changes *only* in reaction to these events
 type Msg =
     | SelectHex of Axial
-    | Increment
-    | Decrement
-    | InitialCountLoaded of Counter
+    | HoverHex of Axial
 
-let initialCounter () = Fetch.fetchAs<unit, Counter> "/api/init"
-
-// defines the initial state and initial command (= side-effect) of the application
 let init (): Model * Cmd<Msg> =
-    let initialModel =
-        { Counter = None
-          GameMap = GameMap.init }
+    { Puzzle = Puzzle.init
+      Selected = Axial.center
+      Hover = None }, Cmd.none
 
-    let loadCountCmd =
-        Cmd.OfPromise.perform initialCounter () InitialCountLoaded
-
-    initialModel, loadCountCmd
-
-// The update function computes the next state of the application based on the current state and the incoming events/messages
-// It can also run side-effects (encoded as commands) like calling the server via Http.
-// these commands in turn, can dispatch messages to which the update function will react.
 let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
     match msg with
-    | Increment ->
-        { model with Counter = model.Counter |> Option.map (fun counter -> { Value = counter.Value + 1 }) }, Cmd.none
-    | Decrement ->
-        { model with Counter = model.Counter |> Option.map (fun counter -> { Value = counter.Value - 1 }) }, Cmd.none
-    | InitialCountLoaded initialCount ->
-        { model with Counter = Some initialCount }, Cmd.none
     | SelectHex axial ->
-        { model with GameMap = GameMap.toggle axial model.GameMap }, Cmd.none
+        { model with Selected = axial }, Cmd.none
+    | HoverHex axial ->
+        { model with Hover = Some axial }, Cmd.none
+// let gameMap map dispatch =
+//     let size = GameMap.tileSize
+//     // let h = sqrt(3.) * (float size)
+//     // let w = 2. * (float size)
+//     // let horizontalDistance = w * 0.75
 
-let gameMap map dispatch =
-    let size = GameMap.tileSize
-    // let h = sqrt(3.) * (float size)
-    // let w = 2. * (float size)
-    // let horizontalDistance = w * 0.75
+//     let center = Point(500., 500.)
 
+//     // let startPoint = Point (500., 500.)
+//     // let nextHexStartPoint = Point(startPoint.X + horizontalDistance, startPoint.Y + (h/2.))
+
+//     let axialToPoint =
+//         Hex.flatHexToPixel size
+//         >> fun point -> center + point
+//         >> fun point ->
+//             [ 0 .. 6 ]
+//             |> List.map (Hex.flatHexCorner point size)
+//             |> List.fold (fun curr (Point (x, y)) -> sprintf "%s %f,%f" curr x y) ""
+
+//     let stateToColor =
+//         function
+//         | Empty -> "#1a3643"
+//         | Selected -> "#f2b07b"
+//         | NotSelectable -> "#f0f0e8"
+
+//     let stateToBorderColor =
+//         function
+//         | Empty -> "#0f1417"
+//         | Selected -> "#f2b07b"
+//         | NotSelectable -> "#f0f0e8"
+
+//     let selectAxial axe hexState _ =
+//         match hexState with
+//         | Empty
+//         | Selected ->
+//             SelectHex axe |> dispatch
+//         | NotSelectable -> ()
+
+//     svg
+//         [ Id "board"
+//           HTMLAttr.Custom("xmlns", "http://www.w3.org/2000/svg")
+//           HTMLAttr.Custom("version", "1.1")
+//           HTMLAttr.Custom("width", "100%")
+//           HTMLAttr.Custom("height", "100vh")
+//           HTMLAttr.Custom("xmlnsXlink", "http://www.w3.org/1999/xlink") ]
+
+//         (map
+//          |> GameMap.toList
+//          |> List.map (fun (axe, state) ->
+//              polyline [ Class "hex"
+//                         HTMLAttr.Custom("stroke", (stateToBorderColor state))
+//                         HTMLAttr.Custom("fill", (stateToColor state))
+//                         HTMLAttr.Custom("points", axialToPoint axe)
+//                         OnClick (selectAxial axe state) ] []))
+
+let drawPuzzle selected hovered puzzleMap dispatch =
+    let size = Puzzle.tileSize
     let center = Point(500., 500.)
 
-    // let startPoint = Point (500., 500.)
-    // let nextHexStartPoint = Point(startPoint.X + horizontalDistance, startPoint.Y + (h/2.))
-
-    let axialToPoint =
+    let axialToHexPixelPoints =
         Hex.flatHexToPixel size
         >> fun point -> center + point
         >> fun point ->
@@ -73,13 +99,51 @@ let gameMap map dispatch =
             |> List.map (Hex.flatHexCorner point size)
             |> List.fold (fun curr (Point (x, y)) -> sprintf "%s %f,%f" curr x y) ""
 
-    let stateToColor =
-        function
-        | Empty -> "#1a3643"
-        | Selected -> "#f2b07b"
+    let axialToPixelPoint =
+        let w = (float size) / 2.
+
+        Hex.flatHexToPixel size
+        >> fun point -> center + point
+        >> fun (Point(x, y)) -> Point (x - w, y)
+    // <text font-size="{{ fontsize }}"
+    //           fill="{{ color }}"
+    //           font-family="Verdana"
+    //           x="{{ xpos }}"
+    //           y="{{ ypos }}">{{ num }}</text>
+    // let stateToColor =
+    //     function
+    //     | Empty -> "#1a3643"
+    //     | Selected -> "#f2b07b"
+    //     | NotSelectable -> "#f0f0e8"
+
+    // let stateToBorderColor =
+    //     function
+    //     | Empty -> "#0f1417"
+    //     | Selected -> "#f2b07b"
+    //     | NotSelectable -> "#f0f0e8"
+
+    // let selectAxial axe hexState _ =
+    //     match hexState with
+    //     | Empty
+    //     | Selected ->
+    //         SelectHex axe |> dispatch
+    //     | NotSelectable -> ()
+
+    let line =
+        match hovered with
+        | Some axe -> Axial.line selected axe
+        | _ -> []
 
     let selectAxial axe _ =
         dispatch <| SelectHex axe
+
+    let hoverAxial axe _ =
+        dispatch <| HoverHex axe
+
+    let fillColor axe =
+        if List.contains axe line then
+            "#6bc4d2"
+        else "#f0f0e8"
 
     svg
         [ Id "board"
@@ -89,14 +153,20 @@ let gameMap map dispatch =
           HTMLAttr.Custom("height", "100vh")
           HTMLAttr.Custom("xmlnsXlink", "http://www.w3.org/1999/xlink") ]
 
-        (map
-         |> GameMap.toList
+        (puzzleMap
+         |> Puzzle.toList
          |> List.map (fun (axe, state) ->
-             polyline [ Class "hex"
-                        HTMLAttr.Custom("stroke", "#0f1417")
-                        HTMLAttr.Custom("fill", (stateToColor state))
-                        HTMLAttr.Custom("points", axialToPoint axe) 
-                        OnClick (selectAxial axe) ] []))
+            fragment [] [
+                polyline [ Class "hex"
+                           HTMLAttr.Custom("stroke", "#0f1417")
+                           HTMLAttr.Custom("fill", fillColor axe)
+                           HTMLAttr.Custom("points", axialToHexPixelPoints axe)
+                           OnClick (selectAxial axe)
+                           OnMouseOver (hoverAxial axe) ] [ ]
+                text [ HTMLAttr.Custom("fill", "#0f1417")
+                       HTMLAttr.Custom("fontFamily", "Verdana")
+                       HTMLAttr.Custom("x", (axialToPixelPoint axe).X)
+                       HTMLAttr.Custom("y", (axialToPixelPoint axe).Y) ] [ str <| PuzzlePiece.toDebugString axe state ] ]))
 
 let safeComponents =
     let components =
@@ -126,14 +196,52 @@ let safeComponents =
         components
     ]
 
-let show =
-    function
-    | { Counter = Some counter } -> string counter.Value
-    | { Counter = None } -> "Loading..."
+let drawPuzzlePiece (i: int) =
+    let size = Puzzle.tileSize
 
+    let h = sqrt(3.) * (float size)
+    let w = 2. * (float size)
+
+    let center = Point(w/2. + 1.5, h/2. + 1.)
+    
+    let axialToHexPixelPoints =
+        Hex.flatHexToPixel size (Axial(0, 0))
+        |> fun point -> center + point
+        |> fun point ->
+            [ 0 .. 6 ]
+            |> List.map (Hex.flatHexCorner point size)
+            |> List.fold (fun curr (Point (x, y)) -> sprintf "%s %f,%f" curr x y) ""
+
+    svg
+        [ HTMLAttr.Custom("xmlns", "http://www.w3.org/2000/svg")
+          HTMLAttr.Custom("version", "1.1")
+          HTMLAttr.Custom("width", "150px")
+          HTMLAttr.Custom("height", "100px")
+          HTMLAttr.Custom("xmlnsXlink", "http://www.w3.org/1999/xlink") ]
+        [
+            polyline [ HTMLAttr.Custom("stroke", "#0f1417")
+                       HTMLAttr.Custom("fill", "#f0f0e8")
+                       HTMLAttr.Custom("points", axialToHexPixelPoints ) ] [ ] ]
+let menu =
+    ul [ Class "puzzle-menu" ] [
+        yield! [ 1..4 ] |> List.map (fun i -> li [] [ drawPuzzlePiece i ])
+        yield! [ 6..18 ] |> List.map (fun i -> li [] [ drawPuzzlePiece i ]) ]
+
+//  <div class="parent">
+//     <div class="section yellow" contenteditable>
+//     Min: 150px / Max: 25%
+//     </div>
+//     <div class="section purple" contenteditable>
+//       This element takes the second grid position (1fr), meaning
+//       it takes up the rest of the remaining space.
+//     </div>
+//   </div>
 let view (model: Model) (dispatch: Msg -> unit) =
     fragment [] [
-        gameMap model.GameMap dispatch
+        main [] [
+            div [ Class "sidebar" ] [ menu ]
+            div [ Class "conent" ] [ drawPuzzle model.Selected model.Hover model.Puzzle dispatch ]
+        ]
         safeComponents
     ]
 

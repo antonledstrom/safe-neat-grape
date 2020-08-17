@@ -10,7 +10,33 @@ $red-orange: #f0865c;
 
 body {
     background-color: $white;
+    font-family: system-ui, serif;
     // background: linear-gradient(135deg, #fff 10%, $white 100%);
+}
+
+main {
+    display: grid;
+    grid-template-columns: minmax(150px, 25%) 1fr;
+    padding: 0;
+    margin: 0;
+
+    .sidebar {
+        height: 100vh;
+        //   background: $grapefruit-orange;
+        ul.puzzle-menu {
+            list-style: none;
+            li {
+                padding: 0.5rem 1rem;
+                border-left: 4px solid $grapefruit-orange;
+                margin-bottom: 0.5rem;
+            }
+        }
+    }
+
+    .content {
+        padding: 2rem;
+        height: 100vh;
+    }
 }
 
 // $block: '.hex-grid';
